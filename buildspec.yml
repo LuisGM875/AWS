@@ -1,0 +1,29 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: us-east-1  # Define la región de AWS (puedes cambiarla según tu caso)
+    IMAGE_REPO_NAME: testcodepipeline  # Nombre de tu repositorio en ECR
+    IMAGE_TAG: latest  # Etiqueta que se asignará a la imagen Docker (puedes usar el SHA de commit o una versión)
+
+phases:
+  pre_build:
+    commands:
+      - echo Iniciando sesión en Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo "Repositorio de imagen configurado como: $IMAGE_REPO_NAME"
+      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_REPO_NAME
+  build:
+    commands:
+      - echo "Comenzando la construcción de la imagen en `date`"
+      - docker build -t $IMAGE_REPO_NAME .
+      - docker tag $IMAGE_REPO_NAME:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo "Empujando la imagen Docker a ECR..."
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo "Construcción y subida completadas en `date`"
+artifacts:
+  files:
+    - '**/*'  # Si tienes archivos que quieras exportar como artefactos (opcional)
+  discard-paths: yes
