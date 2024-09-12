@@ -2,9 +2,9 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: us-east-1  # Define la región de AWS (puedes cambiarla según tu caso)
-    IMAGE_REPO_NAME: testcodepipeline  # Nombre de tu repositorio en ECR
-    IMAGE_TAG: latest  # Etiqueta que se asignará a la imagen Docker (puedes usar el SHA de commit o una versión)
+    AWS_REGION: us-east-1
+    IMAGE_REPO_NAME: testcodepipeline
+    IMAGE_TAG: latest
 
 phases:
   pre_build:
@@ -25,5 +25,5 @@ phases:
       - echo "Construcción y subida completadas en `date`"
 artifacts:
   files:
-    - '**/*'  # Si tienes archivos que quieras exportar como artefactos (opcional)
+    - '**/*'
   discard-paths: yes
