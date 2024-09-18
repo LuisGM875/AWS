@@ -3,15 +3,14 @@ version: 0.2
 phases:
   install:
     commands:
-      - echo Installing dependencies...
-      - npm install
+      - chmod +x ./gradlew
+      - ./gradlew build
   build:
     commands:
-      - echo Build started on `date`
-      - npm run build
-    post_build:
+      - docker build -t spring-api-gradle .
+  post_build:
     commands:
-      - echo Build completed on `date`
+      - echo '[{"name":"spring-api-gradle","imageUri":"588738588574.dkr.ecr.us-east-1.amazonaws.com/aws-test-repository"}]' > imagedefinitions.json
 
 artifacts:
   files:
