@@ -3,16 +3,41 @@ version: 0.2
 phases:
   install:
     commands:
-      - chmod +x ./gradlew
-      - ./gradlew build
+      - echo Installing Terraform...
+      - rm -rf terraform  # Eliminar cualquier archivo o directorio llamado 'terraform'
+      - curl -O https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
+      - unzip terraform_1.5.0_linux_amd64.zip -d /usr/local/bin/
+      - terraform --version
+
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 588738588574.dkr.ecr.us-east-1.amazonaws.com
   build:
     commands:
+      - echo Running Terraform Init...
+      - terraform init  # Inicializa Terraform en el directorio donde están los archivos .tf
+      - echo Applying Terraform Configuration...
+      - terraform apply -auto-approve -lock=false  # Aplica la configuración de Terraform
+      - echo Building the JAR file with Gradle...
+      - chmod +x ./gradlew
+      - ./gradlew build
+      - echo Building the Docker image...
       - docker build -t spring-api-gradle .
+      - docker tag spring-api-gradle:latest 588738588574.dkr.ecr.us-east-1.amazonaws.com/spring-api-gradle:latest  # Etiquetar la imagen con 'latest'
+
   post_build:
     commands:
-      - echo '[{"name":"spring-api-gradle","imageUri":"588738588574.dkr.ecr.us-east-1.amazonaws.com/aws-test-repository"}]' > imagedefinitions.json
+      - echo Pushing the Docker image to ECR...
+      - docker push 588738588574.dkr.ecr.us-east-1.amazonaws.com/spring-api-gradle:latest
+      - echo Creating imagedefinitions.json file...
+      - printf '[{"name":"spring-api-gradle","imageUri":"%s"}]' 588738588574.dkr.ecr.us-east-1.amazonaws.com/spring-api-gradle:latest > imagedefinitions.json
+      - echo Destroying Terraform resources...
+      
+
+
 
 artifacts:
   files:
     - '*/'
-  discard-paths: no
+    - imagedefinitions.json
